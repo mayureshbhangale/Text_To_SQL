@@ -27,12 +27,12 @@ class NLToSQLError(Exception):
     severity: ErrorSeverity = ErrorSeverity.FATAL
     error_code: str = "UNKNOWN_ERROR"
 
-    def __init__(self, message: str, context: dict | None = None) -> None:
+    def __init__(self, message: str, context: dict[str, object] | None = None) -> None:
         super().__init__(message)
         self.message = message
         self.context = context or {}
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         return {
             "error_code": self.error_code,
             "severity": self.severity,

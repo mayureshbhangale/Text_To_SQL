@@ -67,6 +67,6 @@ class GroqProvider(BaseLLMProvider):
                 headers={"Authorization": f"Bearer {self._api_key}"},
                 timeout=5.0,
             )
-            return resp.status_code == 200
+            return bool(resp.status_code == 200)
         except httpx.HTTPError:
             return False

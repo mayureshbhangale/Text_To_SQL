@@ -57,6 +57,6 @@ class OllamaProvider(BaseLLMProvider):
     def health_check(self) -> bool:
         try:
             resp = httpx.get(f"{self._base_url}/api/tags", timeout=5.0)
-            return resp.status_code == 200
+            return bool(resp.status_code == 200)
         except httpx.HTTPError:
             return False

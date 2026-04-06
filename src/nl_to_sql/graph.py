@@ -12,9 +12,12 @@ State flows as a single PipelineState object through every node.
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Callable
 from typing import Literal
 
 from langgraph.graph import END, START, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from nl_to_sql.agents import a1_sql_composer
 from nl_to_sql.agents.base import BaseLLMProvider
@@ -29,7 +32,7 @@ from nl_to_sql.tools import (
 )
 
 
-def build_graph(provider: BaseLLMProvider) -> StateGraph:
+def build_graph(provider: BaseLLMProvider) -> CompiledStateGraph[PipelineState, None, PipelineState, PipelineState]:
     """
     Build and compile the LangGraph pipeline.
 
@@ -182,7 +185,9 @@ def _finalize_failure(state: PipelineState) -> PipelineState:
 
 # ── Node wrappers ──────────────────────────────────────────────────────────────
 
-def _wrap(fn):
+def _wrap(
+    fn: Callable[[PipelineState], PipelineState],
+) -> Callable[[PipelineState], PipelineState]:
     """Wrap a sync tool function as a LangGraph node."""
     def node(state: PipelineState) -> PipelineState:
         return fn(state)
@@ -190,10 +195,10 @@ def _wrap(fn):
     return node
 
 
-def _make_llm_node(provider: BaseLLMProvider):
+def _make_llm_node(
+    provider: BaseLLMProvider,
+) -> Callable[[PipelineState], PipelineState]:
     """Wrap the async A1 composer as a LangGraph node with provider injected."""
-    import asyncio
-
     async def node(state: PipelineState) -> PipelineState:
         return await a1_sql_composer.run(state, provider)
 
