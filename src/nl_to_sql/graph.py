@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from typing import Literal
+from typing import Any, Literal
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
@@ -185,20 +185,22 @@ def _finalize_failure(state: PipelineState) -> PipelineState:
 
 # ── Node wrappers ──────────────────────────────────────────────────────────────
 
-def _wrap(
-    fn: Callable[[PipelineState], PipelineState],
-) -> Callable[[PipelineState], PipelineState]:
-    """Wrap a sync tool function as a LangGraph node."""
+def _wrap(fn: Callable[[PipelineState], PipelineState]) -> Any:
+    """Wrap a sync tool function as a LangGraph node.
+
+    Returns Any so LangGraph's overloaded add_node stubs accept it.
+    """
     def node(state: PipelineState) -> PipelineState:
         return fn(state)
     node.__name__ = fn.__name__
     return node
 
 
-def _make_llm_node(
-    provider: BaseLLMProvider,
-) -> Callable[[PipelineState], PipelineState]:
-    """Wrap the async A1 composer as a LangGraph node with provider injected."""
+def _make_llm_node(provider: BaseLLMProvider) -> Any:
+    """Wrap the async A1 composer as a LangGraph node with provider injected.
+
+    Returns Any so LangGraph's overloaded add_node stubs accept it.
+    """
     async def node(state: PipelineState) -> PipelineState:
         return await a1_sql_composer.run(state, provider)
 
