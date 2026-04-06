@@ -13,7 +13,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # ── Enums ────────────────────────────────────────────────────────────────────
 
@@ -171,6 +171,4 @@ class PipelineState(BaseModel):
     status: PipelineStatus = PipelineStatus.PENDING
     trace: ObservabilityTrace = Field(default_factory=ObservabilityTrace)
 
-    class Config:
-        # Allow mutation — LangGraph nodes update state in place
-        frozen = False
+    model_config = ConfigDict(frozen=False)

@@ -2,9 +2,12 @@
 import pytest
 
 from nl_to_sql.errors.types import (
+    AmbiguousColumnReferenceError,
     GuardrailViolationError,
     HallucinatedColumnError,
     HallucinatedTableError,
+    InvalidJoinError,
+    SQLParseError,
 )
 from nl_to_sql.state import ValidationStatus
 from nl_to_sql.tools import t4_join_graph_builder as t4
@@ -44,6 +47,13 @@ def test_empty_sql(state_with_schema):
     assert result.guardrail_result.status == ValidationStatus.FAIL
 
 
+def test_obfuscated_delete_blocked(state_with_schema):
+    # sqlglot token scan layer catches this even if regex misses
+    state_with_schema.candidate_sql = "DELETE FROM customers WHERE id = 1"
+    with pytest.raises(GuardrailViolationError):
+        t6.run(state_with_schema)
+
+
 # ── T7: SQL Parser + Schema Validator ────────────────────────────────────────
 
 def test_valid_sql_passes(state_with_schema):
@@ -68,4 +78,32 @@ def test_hallucinated_column_raises(state_with_schema):
     state_with_schema = t4.run(state_with_schema)
     state_with_schema.candidate_sql = "SELECT customers.ghost_col FROM customers"
     with pytest.raises(HallucinatedColumnError):
+        t7.run(state_with_schema)
+
+
+def test_unparseable_sql_raises(state_with_schema):
+    state_with_schema = t4.run(state_with_schema)
+    state_with_schema.candidate_sql = "THIS IS NOT SQL ;;; !!!"
+    with pytest.raises(SQLParseError):
+        t7.run(state_with_schema)
+
+
+def test_ambiguous_column_raises(state_with_schema):
+    # 'id' exists in both customers and orders — unqualified reference is ambiguous
+    state_with_schema = t4.run(state_with_schema)
+    state_with_schema.candidate_sql = (
+        "SELECT id FROM customers JOIN orders ON customers.id = orders.customer_id"
+    )
+    with pytest.raises(AmbiguousColumnReferenceError):
+        t7.run(state_with_schema)
+
+
+def test_invalid_join_raises(state_with_schema):
+    # customers and order_items have no direct FK — only via orders
+    state_with_schema = t4.run(state_with_schema)
+    state_with_schema.candidate_sql = (
+        "SELECT customers.name FROM customers "
+        "JOIN order_items ON customers.id = order_items.id"
+    )
+    with pytest.raises(InvalidJoinError):
         t7.run(state_with_schema)
