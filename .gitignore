@@ -34,3 +34,4 @@ Thumbs.db
 
 # Schema cache (disk-persisted T1 results)
 .schema_cache/
+venv/
