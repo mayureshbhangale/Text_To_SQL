@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from nl_to_sql.agents.base import LLMResponse
 from nl_to_sql.agents import a1_sql_composer
+from nl_to_sql.agents.base import LLMResponse
 from nl_to_sql.errors.types import EmptySQLGeneratedError, LLMProviderError
 from nl_to_sql.state import PipelineState
 

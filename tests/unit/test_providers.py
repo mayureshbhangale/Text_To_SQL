@@ -9,7 +9,6 @@ from nl_to_sql.agents.providers.groq import GroqProvider
 from nl_to_sql.agents.providers.ollama import OllamaProvider
 from nl_to_sql.errors.types import LLMProviderError
 
-
 # ── Groq ──────────────────────────────────────────────────────────────────────
 
 class TestGroqProvider:
