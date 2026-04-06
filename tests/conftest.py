@@ -11,7 +11,6 @@ import pytest
 
 from nl_to_sql.state import PipelineState
 
-
 SAMPLE_SCHEMA_FULL = {
     "customers": {
         "columns": [

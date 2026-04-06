@@ -1,10 +1,17 @@
-"""Unit tests for T6: Guardrails"""
+"""Unit tests for T6: Guardrails and T7: SQL Parser + Schema Validator"""
 import pytest
 
-from nl_to_sql.errors.types import GuardrailViolationError
+from nl_to_sql.errors.types import (
+    GuardrailViolationError,
+    HallucinatedColumnError,
+    HallucinatedTableError,
+)
 from nl_to_sql.state import ValidationStatus
+from nl_to_sql.tools import t4_join_graph_builder as t4
 from nl_to_sql.tools import t6_guardrails as t6
+from nl_to_sql.tools import t7_sql_validator as t7
 
+# ── T6: Guardrails ────────────────────────────────────────────────────────────
 
 def test_select_passes(state_with_schema):
     state_with_schema.candidate_sql = "SELECT * FROM customers"
@@ -37,12 +44,7 @@ def test_empty_sql(state_with_schema):
     assert result.guardrail_result.status == ValidationStatus.FAIL
 
 
-"""Unit tests for T7: SQL Parser + Schema Validator"""
-from nl_to_sql.errors.types import HallucinatedColumnError, HallucinatedTableError
-from nl_to_sql.state import ValidationStatus
-from nl_to_sql.tools import t4_join_graph_builder as t4
-from nl_to_sql.tools import t7_sql_validator as t7
-
+# ── T7: SQL Parser + Schema Validator ────────────────────────────────────────
 
 def test_valid_sql_passes(state_with_schema):
     state_with_schema = t4.run(state_with_schema)

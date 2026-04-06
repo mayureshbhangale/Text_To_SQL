@@ -19,7 +19,6 @@ import time
 from nl_to_sql.errors.types import SchemaNormalizationError
 from nl_to_sql.state import ColumnMeta, PipelineState, TableMeta
 
-
 # Common prefixes that add no semantic value
 _STRIP_PREFIXES = re.compile(
     r"^(tbl_|tbl|t_|tb_|vw_|view_|v_|fct_|dim_|stg_|usr_|ref_)",

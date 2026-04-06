@@ -9,10 +9,10 @@ decide whether to retry, ask for clarification, or hard-fail.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ErrorSeverity(str, Enum):
+class ErrorSeverity(StrEnum):
     """Controls retry and escalation behaviour."""
     RETRYABLE    = "retryable"    # send back to LLM with error context
     CLARIFIABLE  = "clarifiable"  # ask user for more info

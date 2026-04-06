@@ -12,7 +12,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine, inspect
 
 from nl_to_sql.cache.schema_cache import schema_cache
 from nl_to_sql.errors.types import SchemaEmptyError, SchemaIntrospectionError

@@ -10,15 +10,14 @@ without mutating previous fields. This makes the full trace inspectable.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
-
 # ── Enums ────────────────────────────────────────────────────────────────────
 
-class PipelineStatus(str, Enum):
+class PipelineStatus(StrEnum):
     PENDING    = "pending"
     RUNNING    = "running"
     SUCCESS    = "success"
@@ -27,7 +26,7 @@ class PipelineStatus(str, Enum):
     RETRYING   = "retrying"
 
 
-class ValidationStatus(str, Enum):
+class ValidationStatus(StrEnum):
     PASS    = "pass"
     FAIL    = "fail"
     SKIPPED = "skipped"
