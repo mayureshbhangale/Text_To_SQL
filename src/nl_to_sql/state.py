@@ -109,6 +109,10 @@ class PipelineState(BaseModel):
         default=False,
         description="Set to True to bypass the schema cache and re-introspect the DB",
     )
+    dialect: str = Field(
+        default="sqlite",
+        description="SQL dialect for parsing and prompt generation (e.g. 'sqlite', 'postgres')",
+    )
 
     # ── Phase 1: Schema understanding ─────────────────────────────────────────
     schema_full: dict[str, Any] = Field(

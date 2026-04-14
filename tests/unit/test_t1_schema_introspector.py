@@ -10,7 +10,7 @@ from nl_to_sql.errors.types import SchemaEmptyError, SchemaIntrospectionError
 from nl_to_sql.state import PipelineState
 from nl_to_sql.tools import t1_schema_introspector as t1
 
-CONN = "postgresql://user:pass@localhost/testdb"
+CONN = "sqlite:///test.db"
 
 
 @pytest.fixture

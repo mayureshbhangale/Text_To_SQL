@@ -1,0 +1,90 @@
+graph TD
+    %% --- Styling Definitions ---
+    classDef external fill:#f9f,stroke:#333,stroke-width:2px,color:black;
+    classDef orchestration fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:black,stroke-dasharray: 5 5;
+    classDef tool fill:#fff3e0,stroke:#e65100,stroke-width:1px,color:black;
+    classDef llm fill:#d1c4e9,stroke:#512da8,stroke-width:2px,color:black;
+    classDef state fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:black,font-family:monospace;
+    classDef guardrail fill:#ffebee,stroke:#c62828,stroke-width:2px,color:black;
+
+    %% --- External Inputs ---
+    User(["👤 User NL Question"]):::external --> LQ_Input
+    DB[("PostgreSQL DB")]:::external --> T1
+
+    %% --- The LangGraph Orchestrator ---
+    subgraph LangGraph Orchestration [⚡ LangGraph Orchestrator Pipeline]
+        direction TB
+
+        %% Shared State visualization showing accretion
+        SHARED_STATE[("📄 Shared State Object\n{question, raw_schema, norm_schema,\nfk_graph, prompt_ctx, candidate_sql,\nvalidation_results}")]:::state
+
+        %% LQ Input Node
+        LQ_Input("Input Node"):::orchestration --> PHASE_SCHEMA
+
+        %% --- Phase 1: Schema Understanding ---
+        subgraph PHASE_SCHEMA [Phase 1: Schema Understanding & Prep]
+            T1["T1: Schema Introspector\n(SQLAlchemy / info_schema)"]:::tool
+            T1 -- "Raw Metadata (tables, cols, types, PK/FK)" --> T2
+            T1 -- "FK Constraints" --> T4
+            
+            T2["T2: Schema Normalizer\n(Tokenization, Friendly Names)"]:::tool
+            T4["T4: Join Graph Builder\n(FK Relationship Edges)"]:::tool
+        end
+
+        %% Flow update state
+        T1 -.-o SHARED_STATE
+        T2 -.-o SHARED_STATE
+        T4 -.-o SHARED_STATE
+
+        T2 --> T5
+        T4 --> T5
+
+        %% --- Phase 2: Generation ---
+        subgraph PHASE_GEN [Phase 2: Contextualization & Generation]
+            T5["T5: Prompt Context Builder\n(Format schema, add dialect + constraints)"]:::tool
+            
+            T5 -- "Formatted System Prompt + User Q" --> A1
+
+            A1{{"A1: SQL Composer LLM\n(e.g., Qwen-2.5-Coder)"}}:::llm
+        end
+        
+        %% Flow update state
+        T5 -.-o SHARED_STATE
+        A1 -- "Candidate SQL String" --o SHARED_STATE
+
+        A1 --> PHASE_VALIDATE
+
+        %% --- Phase 3: Static Validation ---
+        subgraph PHASE_VALIDATE [Phase 3: Static Guardrails & Validation]
+            T6["T6: Guardrails\n(Regex check: SELECT only, No DML/DDL)"]:::guardrail
+            
+            T6 -- "If Pass" --> T7
+            T6 -- "If Fail (Block)" --> T7_FAIL["Validation Failure Report"]
+
+            T7["T7: SQL Parser + Validator\n(sqlglot AST parsing)"]:::tool
+            
+            %% T7 needs schema context to validate
+            SHARED_STATE -.->|Requires Schema Context| T7
+
+            T7 -- "Analyze AST vs Schema Metadata" --> T7_DECISION{"Valid Structure?"}
+            
+            T7_DECISION -- "Yes (OK)" --> T7_PASS["Validation OK Result"]
+            T7_DECISION -- "No (Missing cols/tables, Ambiguous refs)" --> T7_FAIL
+        end
+
+        %% Flow update state
+        T7_PASS -.-o SHARED_STATE
+        T7_FAIL -.-o SHARED_STATE
+
+        T7_PASS --> LQ_Output
+        T7_FAIL --> LQ_Output
+
+        %% Output Node
+        LQ_Output("Output Node"):::orchestration
+    end
+
+    %% --- Final Output ---
+    LQ_Output --> FINAL_OUT["📄 Final Output\n(SQL Query + Static Validation Report)"]:::external
+
+    %% Link styles for clarity
+    linkStyle default stroke-width:2px,fill:none,stroke:black;

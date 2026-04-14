@@ -15,7 +15,7 @@ from nl_to_sql.state import PipelineState
 def state():
     return PipelineState(
         question="Show all customers",
-        db_connection_string="postgresql://test@localhost/db",
+        db_connection_string="sqlite:///test.db",
         prompt_context="You are a SQL expert.",
     )
 

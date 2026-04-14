@@ -50,7 +50,7 @@ def run(state: PipelineState) -> PipelineState:
 
         # Parse
         try:
-            statements = sqlglot.parse(sql, dialect="postgres")
+            statements = sqlglot.parse(sql, dialect=state.dialect)
             if not statements or statements[0] is None:
                 raise SQLParseError(
                     "sqlglot could not parse the candidate SQL.",
@@ -117,8 +117,7 @@ def run(state: PipelineState) -> PipelineState:
                         joined_pairs.append((other_table, joined_table))
 
         for a, b in joined_pairs:
-            neighbours = fk_graph.get(a, [])
-            if b not in neighbours and fk_graph:   # only enforce if FK graph is non-empty
+            if fk_graph and not _fk_reachable(fk_graph, a, b):
                 raise InvalidJoinError(
                     f"No FK relationship between '{a}' and '{b}'.",
                     context={"from": a, "to": b, "fk_graph": fk_graph},
@@ -138,3 +137,18 @@ def run(state: PipelineState) -> PipelineState:
         state.trace.node_timings["t7"] = round(time.perf_counter() - t_start, 4)
 
     return state
+
+
+def _fk_reachable(fk_graph: dict[str, list[str]], start: str, end: str) -> bool:
+    """BFS reachability in FK graph — allows multi-hop joins via junction tables."""
+    visited: set[str] = {start}
+    queue = [start]
+    while queue:
+        node = queue.pop(0)
+        for neighbour in fk_graph.get(node, []):
+            if neighbour == end:
+                return True
+            if neighbour not in visited:
+                visited.add(neighbour)
+                queue.append(neighbour)
+    return False

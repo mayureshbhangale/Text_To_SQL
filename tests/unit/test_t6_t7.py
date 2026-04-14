@@ -99,11 +99,17 @@ def test_ambiguous_column_raises(state_with_schema):
 
 
 def test_invalid_join_raises(state_with_schema):
-    # customers and order_items have no direct FK — only via orders
+    # Add an isolated table with no FK relationship to any other table
+    state_with_schema.schema_full["audit_log"] = {
+        "columns": [{"name": "id", "type": "INTEGER", "nullable": False}],
+        "primary_keys": ["id"],
+        "foreign_keys": [],
+    }
     state_with_schema = t4.run(state_with_schema)
+    # audit_log has no FK path to customers — this join is truly phantom
     state_with_schema.candidate_sql = (
         "SELECT customers.name FROM customers "
-        "JOIN order_items ON customers.id = order_items.id"
+        "JOIN audit_log ON customers.id = audit_log.id"
     )
     with pytest.raises(InvalidJoinError):
         t7.run(state_with_schema)

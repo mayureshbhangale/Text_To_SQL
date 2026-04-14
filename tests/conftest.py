@@ -66,7 +66,7 @@ def sample_schema_full() -> dict:
 def sample_state() -> PipelineState:
     return PipelineState(
         question="Show me all customers who placed an order",
-        db_connection_string="postgresql://test:test@localhost:5432/testdb",
+        db_connection_string="sqlite:///test.db",
     )
 
 

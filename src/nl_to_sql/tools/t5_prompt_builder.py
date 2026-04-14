@@ -19,7 +19,7 @@ import time
 from nl_to_sql.state import FKEdge, PipelineState, TableMeta
 
 _SYSTEM_PROMPT_TEMPLATE = """\
-You are an expert PostgreSQL query writer. Your only job is to convert
+You are an expert {dialect_upper} query writer. Your only job is to convert
 a natural language question into a single, valid, read-only SQL SELECT statement.
 
 Rules you MUST follow:
@@ -30,14 +30,14 @@ Rules you MUST follow:
 5. Always qualify column names with their table name to avoid ambiguity.
 6. If the question cannot be answered with the given schema, output exactly: UNABLE_TO_ANSWER
 
---- DATABASE SCHEMA (PostgreSQL) ---
+--- DATABASE SCHEMA ({dialect_upper}) ---
 {schema_section}
 
 --- FK JOIN HINTS ---
 {join_hints_section}
 
 --- ADDITIONAL CONSTRAINTS ---
-- Dialect: PostgreSQL
+- Dialect: {dialect_upper}
 - Read-only: SELECT only
 - No LIMIT unless the user asks for a specific number of results
 - Use table aliases for readability on multi-table queries
@@ -56,6 +56,7 @@ def run(state: PipelineState) -> PipelineState:
     join_hints_section = _build_join_hints(state.fk_edges)
 
     state.prompt_context = _SYSTEM_PROMPT_TEMPLATE.format(
+        dialect_upper=state.dialect.upper(),
         schema_section=schema_section,
         join_hints_section=join_hints_section or "No foreign key relationships found.",
     )
